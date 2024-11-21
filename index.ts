@@ -1,50 +1,23 @@
 import chain from 'stream-chain';
-// or: const chain = require('stream-chain');
 
-import zlib from 'node:zlib';
-import {Transform} from 'node:stream';
+import StreamJson from 'stream-json'
+import Pick from 'stream-json/filters/Pick'
+const { parser } = StreamJson
 
-// ISSUE:
-// If the length of the array passed to chain is arbitrary, there is no error.
-// If the length of the array is more than one, an error occurs.
-// This was not an error in version 3.1.0 or earlier.
+const chainValue = Pick.withParser({ filter: '' })
+const parserValue = parser()
 
-// this chain object will work on a stream of numbers
+let sw = true // or false
+const chainOrParserValue = sw ? chainValue : parserValue
+
 const pipeline = chain([
-  // transforms a value
-  x => x * x,
 
-  // returns several values
-  x => chain.many([x - 1, x, x + 1]),
+  // A value of type Chain. This is OK.
+  chainValue,
+  // A value of type Parser. This is OK.
+  parserValue,
 
-  // returns multiple values with a generator
-  function* (x) {
-    for (let i = x; i > 0; --i) {
-      yield i;
-    }
-    return 0;
-  },
+  // union of Chain and Parser types, it is an error.
+  // chainOrParserValue,
 
-  // filters out even values
-  x => x % 2 ? x : null,
-
-  // uses an arbitrary transform stream
-  new Transform({
-    objectMode: true,
-    transform(x, _, callback) {
-      callback(null, x + 1);
-    }
-  }),
-
-  // transform to strings
-  x => '' + x,
-
-  // compress
-  zlib.createGzip()
-]);
-
-// the chain object is a regular stream
-// it can be used with normal stream methods
-
-// log errors
-pipeline.on('error', error => console.log(error));
+] as const);
