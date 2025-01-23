@@ -18,6 +18,6 @@ const pipeline = chain([
   parserValue,
 
   // union of Chain and Parser types, it is an error.
-  // chainOrParserValue,
+  chainOrParserValue,
 
 ] as const);
